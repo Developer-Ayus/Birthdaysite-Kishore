@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Happy Birthday Kishore! 🎂✨</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Ambient Starry Grid Background -->
+  <div class="ambient-sparkles"></div>
+
+  <!-- Fullscreen Particle Confetti Canvas -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- Default Background Music Element -->
+
+  <!-- ========================================================================
+       STAGE 1: Secret Vault Gate (Passcode = 2022)
+       ======================================================================== -->
+  <main id="screen-gate" class="app-screen active">
+    <div class="gate-wrapper">
+      <div class="gate-badge">
+        <span class="pulse-dot"></span>
+        <span>CLASSIFIED BIRTHDAY VAULT</span>
+      </div>
+
+      <h1 class="gate-title">Enter Passcode</h1>
+      <p class="gate-subtitle">Only Kishore's real partner-in-crime knows the entry key. What is the <strong>year we first met</strong>?</p>
+
+      <div class="pin-display-group">
+        <div id="slot-0" class="pin-digit-slot active"></div>
+        <div id="slot-1" class="pin-digit-slot"></div>
+        <div id="slot-2" class="pin-digit-slot"></div>
+        <div id="slot-3" class="pin-digit-slot"></div>
+      </div>
+
+      <div id="pin-feedback" class="pin-error-feedback"></div>
+
+      <!-- Interactive Numpad -->
+      <div class="numpad-grid">
+        <button class="num-key" data-num="1">1</button>
+        <button class="num-key" data-num="2">2</button>
+        <button class="num-key" data-num="3">3</button>
+        <button class="num-key" data-num="4">4</button>
+        <button class="num-key" data-num="5">5</button>
+        <button class="num-key" data-num="6">6</button>
+        <button class="num-key" data-num="7">7</button>
+        <button class="num-key" data-num="8">8</button>
+        <button class="num-key" data-num="9">9</button>
+        <button class="num-key action-key" data-action="clear">C</button>
+        <button class="num-key" data-num="0">0</button>
+        <button class="num-key action-key" data-action="delete">⌫</button>
+      </div>
+
+      <div class="gate-cat-preview">
+        <img src="Asset/jendigitalart-cat-133.gif" alt="Cute Cat" loading="lazy">
+        <span>"Psst... Think back to our best memories!"</span>
+      </div>
+    </div>
+  </main>
+
+
+  <!-- ========================================================================
+       STAGE 2: Birthday Cake & Microphone Blow Challenge
+       ======================================================================== -->
+  <section id="screen-cake" class="app-screen">
+    <div class="cake-screen-container">
+      <div class="cake-header">
+        <h2>🎂 Make a Wish, Kishore!</h2>
+        <p>Watch your cake come together, then make a wish and blow out the candles!</p>
+      </div>
+
+      <!-- 3D CSS Birthday Cake -->
+      <div class="cake-stage" id="cake-interactive-stage">
+        <!-- Candles Cluster -->
+        <div class="candles-cluster">
+          <div class="candle">
+            <div class="candle-wick"></div>
+            <div class="flame"></div>
+          </div>
+          <div class="candle center-candle">
+            <div class="candle-wick"></div>
+            <div class="flame"></div>
+          </div>
+          <div class="candle">
+            <div class="candle-wick"></div>
+            <div class="flame"></div>
+          </div>
+        </div>
+        <!-- Top Layer -->
+        <div class="tier top">
+          <div class="sprinkles-decor">
+            <span class="sprinkle" style="top:25px; left:20px; background:#fbbf24; transform:rotate(20deg);"></span>
+            <span class="sprinkle" style="top:35px; left:55px; background:#f43f5e; transform:rotate(-35deg);"></span>
+            <span class="sprinkle" style="top:20px; right:25px; background:#06b6d4; transform:rotate(45deg);"></span>
+          </div>
+        </div>
+
+        <!-- Middle Layer -->
+        <div class="tier middle">
+          <div class="sprinkles-decor">
+            <span class="sprinkle" style="top:28px; left:30px; background:#a855f7; transform:rotate(15deg);"></span>
+            <span class="sprinkle" style="top:40px; left:80px; background:#10b981; transform:rotate(-45deg);"></span>
+            <span class="sprinkle" style="top:30px; right:40px; background:#fbbf24; transform:rotate(30deg);"></span>
+            <span class="sprinkle" style="top:42px; right:85px; background:#f472b6; transform:rotate(-15deg);"></span>
+          </div>
+        </div>
+
+        <!-- Bottom Layer -->
+        <div class="tier bottom">
+          <div class="sprinkles-decor">
+            <span class="sprinkle" style="top:30px; left:40px; background:#06b6d4; transform:rotate(25deg);"></span>
+            <span class="sprinkle" style="top:48px; left:100px; background:#fbbf24; transform:rotate(-30deg);"></span>
+            <span class="sprinkle" style="top:32px; right:50px; background:#34d399; transform:rotate(50deg);"></span>
+            <span class="sprinkle" style="top:52px; right:110px; background:#f472b6; transform:rotate(-20deg);"></span>
+          </div>
+        </div>
+
+        <!-- Golden Plate -->
+        <div class="cake-plate"></div>
+      </div>
+
+      <!-- Blow Sensitivity & Controls Card -->
+      <div class="blow-controls-card">
+        <div class="mic-meter-box">
+          <div class="mic-meter-label">
+            <span id="meter-status-text">🎂 Your birthday cake is being made...</span>
+          </div>
+          <div class="meter-bar-track">
+            <div id="blow-meter-fill" class="meter-bar-fill"></div>
+          </div>
+        </div>
+
+        <div class="blow-buttons-group">
+          <button id="start-mic-btn" class="btn-primary" disabled>
+            <span>🎙️ Enable Microphone</span>
+          </button>
+          <button id="manual-blow-btn" class="btn-secondary" disabled>
+            <span>💨 Or Tap Here to Blow Candles!</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ========================================================================
+       STAGE 3: Grand Celebration & Memory Scrapbook
+       ======================================================================== -->
+  <section id="screen-scrapbook" class="app-screen">
+    <div class="scrapbook-screen">
+      <!-- Hero Banner -->
+      <header class="hero-celebration">
+        <div class="bunting-garland">
+          <span class="bunting-flag">🎈</span>
+          <span class="bunting-flag">✨</span>
+          <span class="bunting-flag">🎉</span>
+          <span class="bunting-flag">⭐</span>
+          <span class="bunting-flag">🎁</span>
+        </div>
+
+        <h1 class="hero-main-title">Happy Birthday, Kishore! 👑</h1>
+        <p class="hero-subtitle">
+          Here’s to another legendary year of unfiltered laughter, wild adventures, and brotherhood.
+          Take a stroll down our memory lane!
+        </p>
+
+        <!-- Friendship Stats Bar -->
+        <div class="friendship-stats-bar">
+          <div class="stat-item">
+            <span class="stat-val" id="stat-years">6+</span>
+            <span class="stat-tag">Years of Brotherhood</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-val" id="stat-days">2,192+</span>
+            <span class="stat-tag">Days Since 2020</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-val">∞</span>
+            <span class="stat-tag">Crazy Memories</span>
+          </div>
+        </div>
+
+        <!-- Cat Cheerleaders -->
+        <div class="cats-cheerleader-group">
+          <div class="cat-cheer-card">
+            <img src="Asset/jendigitalart-cat-133.gif" alt="Dancing Cat">
+            <span>"Best bro ever!"</span>
+          </div>
+          <div class="cat-cheer-card">
+            <img src="Asset/mxj_files-cat-10363.gif" alt="Excited Cat">
+            <span>"Party time! 🥳"</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- ========================================================================
+           Interactive Spiral Notebook Scrapbook
+           ======================================================================== -->
+      <section class="scrapbook-gallery-section">
+        <div class="section-headline">
+          <span class="section-tag">Good Old Memories</span>
+          <h2 class="section-title">Fun Moments in a Scrapbook 📖</h2>
+          <p class="section-hint">Open the notebook to see our cherished moments.</p>
+        </div>
+
+        <div class="notebook-container">
+          <div class="spiral-notebook-wrapper" id="spiral-notebook">
+            <!-- Center Metal Spiral Bindings -->
+            <div class="spiral-spine">
+              <span class="ring"></span><span class="ring"></span><span class="ring"></span>
+              <span class="ring"></span><span class="ring"></span><span class="ring"></span>
+              <span class="ring"></span><span class="ring"></span><span class="ring"></span>
+              <span class="ring"></span><span class="ring"></span><span class="ring"></span>
+            </div>
+
+            <!-- Spiral Pages Stack rendered via JavaScript -->
+            <div id="notebook-pages-stack" class="pages-stack"></div>
+
+            <button type="button" class="notebook-cover" id="notebook-cover" aria-label="Open the scrapbook" aria-expanded="false">
+              <span class="notebook-cover-front">
+                <span class="cover-title">Our Memories</span>
+                <span class="cover-subtitle">A scrapbook for Kishore</span>
+                <span class="cover-open-hint">Tap to open</span>
+              </span>
+              <span class="notebook-cover-inside" aria-hidden="true">
+                <span>Every page holds a memory</span>
+              </span>
+            </button>
+          </div>
+
+          <!-- Notebook Controls -->
+          <div class="notebook-controls">
+            <button id="btn-prev-page" class="nav-btn">◀ Previous</button>
+            <span id="notebook-page-indicator" class="page-indicator">Cover</span>
+            <button id="btn-next-page" class="nav-btn">Open ▶</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Friendship Awards & Roasts -->
+      <section class="awards-section">
+        <div class="section-headline">
+          <span class="section-tag">Certified Bro Honors</span>
+          <h2 class="section-title">The Official Kishore Awards 🏆</h2>
+        </div>
+
+        <div class="awards-grid">
+          <div class="award-card">
+            <div class="award-emoji">🛡️</div>
+            <h3 class="award-title">Ride Or Die Partner</h3>
+            <p class="award-desc">For always having my back, no matter how wild or unplanned the road trip gets.</p>
+          </div>
+
+          <div class="award-card">
+            <div class="award-emoji">👮🏾‍♂️</div>
+            <h3 class="award-title">Chief Vibe Officer</h3>
+            <p class="award-desc">Responsible for supplying top-tier energy, and unmatched humor 24/7.</p>
+          </div>
+
+          <div class="award-card">
+            <div class="award-emoji">😑</div>
+            <h3 class="award-title">"A good Liar"</h3>
+            <p class="award-desc">সব সময় বলবে আমার পরীক্ষা খারাপ হয়, দিয়ে দেখা যায় Mathematics এ সব করেছে Reasoning সব করেছে 🙄 .</p>
+          </div>
+
+          <div class="award-card">
+            <div class="award-emoji">🌟</div>
+            <h3 class="award-title">Brother For Life</h3>
+            <p class="award-desc">From meeting in 2020 to creating memories that will stick around forever. You're one of one.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Handwritten Birthday Letter -->
+      <section class="letter-section">
+        <div class="letter-wrapper">
+          <div class="letter-wax-seal">★</div>
+          <h2 class="letter-header">কবি Kishorendronath Roy,</h2>
+          <div class="letter-body">
+            <p>
+              এখনো অনেক memory বানানো বাকি আছে, অনেক মজা করা বাকি আছে। আমরা একসাথে অনেক কিছু করেছি, কিন্তু আমাদের journey এখনও শেষ হয়নি। আমরা আরও অনেক adventure করব, আরও অনেক হাসি ভাগ করব, এবং আরও অনেক epic memories তৈরি করব।
+            </p>
+            <br>
+            <p>
+              May this new year bring you everything you've been working so hard for — endless health, unbreakable happiness, massive wins in whatever you put your mind to.
+            </p>
+            <br>
+            <p>
+              Keep shining, keep being the genuine soul you are, and have the most unforgettable birthday ever! 🚀🎂
+            </p>
+          </div>
+          <div class="letter-signature">
+            — This message is AI Generated, but the love and memories are 100% real. 🙂💖
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Quick Action Floating Confetti Button -->
+    <button id="fab-confetti" class="fab-confetti" title="Blast Confetti!">🎉</button>
+  </section>
+
+
+  <!-- ========================================================================
+       Lightbox Modal
+       ======================================================================== -->
+  <div id="lightbox-modal" class="lightbox-modal">
+    <div class="lightbox-content">
+      <button id="lightbox-close-btn" class="lightbox-close-btn" title="Close">✕</button>
+      <img id="lightbox-media-img" class="lightbox-media" src="" alt="Zoomed Memory">
+      <video id="lightbox-media-video" class="lightbox-media" controls style="display:none;"></video>
+      <p id="lightbox-caption-text" class="lightbox-caption"></p>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="script.js"></script>
+</body>
+</html>
