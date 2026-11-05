@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Happy Birthday Kishore! 🎂✨</title>
+  <title>Happy Birthday, Kishore</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -17,17 +17,17 @@
   <!-- Default Background Music Element -->
 
   <!-- ========================================================================
-       STAGE 1: Secret Vault Gate (Passcode = 2022)
+       STAGE 1: Birthday Surprise Gate (Passcode = 2020)
        ======================================================================== -->
   <main id="screen-gate" class="app-screen active">
     <div class="gate-wrapper">
       <div class="gate-badge">
         <span class="pulse-dot"></span>
-        <span>CLASSIFIED BIRTHDAY VAULT</span>
+        <span>A LITTLE BIRTHDAY SURPRISE</span>
       </div>
 
-      <h1 class="gate-title">Enter Passcode</h1>
-      <p class="gate-subtitle">Only Kishore's real partner-in-crime knows the entry key. What is the <strong>year we first met</strong>?</p>
+      <h1 class="gate-title">A surprise for Kishore</h1>
+      <p class="gate-subtitle">Only Kishore's partner-in-crime knows the entry key. Enter the <strong>year we first met</strong>.</p>
 
       <div class="pin-display-group">
         <div id="slot-0" class="pin-digit-slot active"></div>
@@ -54,10 +54,6 @@
         <button class="num-key action-key" data-action="delete">⌫</button>
       </div>
 
-      <div class="gate-cat-preview">
-        <img src="Asset/jendigitalart-cat-133.gif" alt="Cute Cat" loading="lazy">
-        <span>"Psst... Think back to our best memories!"</span>
-      </div>
     </div>
   </main>
 
@@ -68,8 +64,8 @@
   <section id="screen-cake" class="app-screen">
     <div class="cake-screen-container">
       <div class="cake-header">
-        <h2>🎂 Make a Wish, Kishore!</h2>
-        <p>Watch your cake come together, then make a wish and blow out the candles!</p>
+        <h2>Make a wish, Kishore</h2>
+        <p>Your cake is almost ready. Take a breath, make a wish, and blow out the candles.</p>
       </div>
 
       <!-- 3D CSS Birthday Cake -->
@@ -153,18 +149,12 @@
     <div class="scrapbook-screen">
       <!-- Hero Banner -->
       <header class="hero-celebration">
-        <div class="bunting-garland">
-          <span class="bunting-flag">🎈</span>
-          <span class="bunting-flag">✨</span>
-          <span class="bunting-flag">🎉</span>
-          <span class="bunting-flag">⭐</span>
-          <span class="bunting-flag">🎁</span>
-        </div>
+        <p class="birthday-kicker">A little something for a very good friend</p>
 
-        <h1 class="hero-main-title">Happy Birthday, Kishore! 👑</h1>
+        <h1 class="hero-main-title">Happy Birthday, Kishore.</h1>
         <p class="hero-subtitle">
-          Here’s to another legendary year of unfiltered laughter, wild adventures, and brotherhood.
-          Take a stroll down our memory lane!
+          From college-day chaos to the memories still waiting to happen—here’s to you, Kishore.
+          Happy birthday, bro.
         </p>
 
         <!-- Friendship Stats Bar -->
@@ -183,17 +173,17 @@
           </div>
         </div>
 
-        <!-- Cat Cheerleaders -->
-        <div class="cats-cheerleader-group">
+        <div class="cats-cheerleader-group" aria-label="Birthday cheer squad">
           <div class="cat-cheer-card">
-            <img src="Asset/jendigitalart-cat-133.gif" alt="Dancing Cat">
-            <span>"Best bro ever!"</span>
+            <img src="Asset/jendigitalart-cat-133.gif" alt="" loading="lazy">
+            <span>Best bro, no contest.</span>
           </div>
           <div class="cat-cheer-card">
-            <img src="Asset/mxj_files-cat-10363.gif" alt="Excited Cat">
-            <span>"Party time! 🥳"</span>
+            <img src="Asset/mxj_files-cat-10363.gif" alt="" loading="lazy">
+            <span>Birthday mode: on.</span>
           </div>
         </div>
+
       </header>
 
       <!-- ========================================================================
@@ -201,23 +191,27 @@
            ======================================================================== -->
       <section class="scrapbook-gallery-section">
         <div class="section-headline">
-          <span class="section-tag">Good Old Memories</span>
-          <h2 class="section-title">Fun Moments in a Scrapbook 📖</h2>
-          <p class="section-hint">Open the notebook to see our cherished moments.</p>
+          <span class="section-tag">The good old days</span>
+          <h2 class="section-title">A few favorite memories</h2>
+          <p class="section-hint">Open the journal. There are a few stories in here.</p>
         </div>
 
         <div class="notebook-container">
           <div class="spiral-notebook-wrapper" id="spiral-notebook">
-            <!-- Center Metal Spiral Bindings -->
+            <div class="book-spread" id="book-spread">
+              <div class="book-side-page left-book-page" id="left-book-page"></div>
+              <div id="notebook-pages-stack" class="pages-stack"></div>
+
+              <button type="button" class="page-turn-corner previous-corner" id="page-corner-prev" aria-label="Turn to the previous page"></button>
+              <button type="button" class="page-turn-corner next-corner" id="page-corner-next" aria-label="Turn to the next page"></button>
+            </div>
+
             <div class="spiral-spine">
               <span class="ring"></span><span class="ring"></span><span class="ring"></span>
               <span class="ring"></span><span class="ring"></span><span class="ring"></span>
               <span class="ring"></span><span class="ring"></span><span class="ring"></span>
               <span class="ring"></span><span class="ring"></span><span class="ring"></span>
             </div>
-
-            <!-- Spiral Pages Stack rendered via JavaScript -->
-            <div id="notebook-pages-stack" class="pages-stack"></div>
 
             <button type="button" class="notebook-cover" id="notebook-cover" aria-label="Open the scrapbook" aria-expanded="false">
               <span class="notebook-cover-front">
@@ -236,6 +230,7 @@
             <button id="btn-prev-page" class="nav-btn">◀ Previous</button>
             <span id="notebook-page-indicator" class="page-indicator">Cover</span>
             <button id="btn-next-page" class="nav-btn">Open ▶</button>
+            <button type="button" id="toggle-page-sound" class="sound-toggle" aria-pressed="false">Turn sound on</button>
           </div>
         </div>
       </section>
@@ -278,10 +273,10 @@
       <section class="letter-section">
         <div class="letter-wrapper">
           <div class="letter-wax-seal">★</div>
-          <h2 class="letter-header">কবি Kishorendronath Roy,</h2>
+          <h2 class="letter-header">কবি Kishorendranath Roy,</h2>
           <div class="letter-body">
             <p>
-              এখনো অনেক memory বানানো বাকি আছে, অনেক মজা করা বাকি আছে। আমরা একসাথে অনেক কিছু করেছি, কিন্তু আমাদের journey এখনও শেষ হয়নি। আমরা আরও অনেক adventure করব, আরও অনেক হাসি ভাগ করব, এবং আরও অনেক epic memories তৈরি করব।
+              এখনো অনেক memory বানানো বাকি আছে, অনেক মজা করা বাকি আছে। আমরা একসাথে অনেক moment share করেছি, কিন্তু আমাদের journey এখনও শেষ হয়নি। আমরা আরও অনেক adventure করব, আরও অনেক হাসি ভাগ করব, এবং আরও অনেক epic memories তৈরি করব।
             </p>
             <br>
             <p>
@@ -293,7 +288,7 @@
             </p>
           </div>
           <div class="letter-signature">
-            — This message is AI Generated, but the love and memories are 100% real. 🙂💖
+            — This message is generated by AI but the memories are 100% real 😁.
           </div>
         </div>
       </section>

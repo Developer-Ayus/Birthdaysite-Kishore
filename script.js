@@ -130,6 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let analyser = null;
   let micStream = null;
   let isListening = false;
+  let micRequestInProgress = false;
   let candlesBlown = false;
   let blowAccumulator = 0;
   let cakeIsReady = false;
@@ -337,22 +338,37 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function initMicrophone() {
-    if (!cakeIsReady) return;
+    if (!cakeIsReady || isListening || micRequestInProgress) return;
 
+    if (!window.isSecureContext) {
+      meterText.textContent = 'Microphone access requires a secure HTTPS page. Tap below to blow! 👇';
+      return;
+    }
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      meterText.textContent = 'Microphone access is not available in this browser. Tap below to blow! 👇';
+      return;
+    }
+
+    const AudioContextConstructor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextConstructor) {
+      meterText.textContent = 'Audio input is not supported in this browser. Tap below to blow! 👇';
+      return;
+    }
+
+    micRequestInProgress = true;
+    startMicBtn.disabled = true;
+    meterText.textContent = 'Please allow microphone access in your browser prompt...';
     try {
-      if (audioContext && audioContext.state === 'suspended') {
-        await audioContext.resume();
-      }
+      const micPermissionRequest = navigator.mediaDevices.getUserMedia({ audio: true, video: false });
       if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        audioContext = new AudioContextConstructor();
       }
 
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        meterText.textContent = 'Mic not supported on this browser. Tap to blow! 👇';
-        return;
-      }
-
-      micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      const resumeAudio = audioContext.state === 'suspended' ? audioContext.resume() : Promise.resolve();
+      micStream = await micPermissionRequest;
+      await resumeAudio;
+      if (audioContext.state === 'suspended') await audioContext.resume();
       const source = audioContext.createMediaStreamSource(micStream);
       analyser = audioContext.createAnalyser();
       analyser.fftSize = 512;
@@ -365,8 +381,24 @@ document.addEventListener('DOMContentLoaded', () => {
       analyzeBlowStream();
     } catch (err) {
       console.warn('Microphone permission denied or error:', err);
-      meterText.textContent = 'Tap the button below to blow out candles! 💨';
+      if (micStream) {
+        micStream.getTracks().forEach((track) => track.stop());
+        micStream = null;
+      }
+
+      if (err.name === 'NotAllowedError' || err.name === 'SecurityError') {
+        meterText.textContent = 'Allow microphone access in your browser settings, then try again. Or tap below! 👇';
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        meterText.textContent = 'No microphone was found. Tap below to blow! 👇';
+      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+        meterText.textContent = 'Your microphone is busy in another app. Close it and try again, or tap below! 👇';
+      } else {
+        meterText.textContent = 'Could not start the microphone. Check browser permissions or tap below! 👇';
+      }
       startMicBtn.textContent = '🎙️ Try Mic Again';
+    } finally {
+      micRequestInProgress = false;
+      if (!isListening && !candlesBlown) startMicBtn.disabled = false;
     }
   }
 
@@ -475,9 +507,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnNext = document.getElementById('btn-next-page');
   const notebook = document.getElementById('spiral-notebook');
   const notebookCover = document.getElementById('notebook-cover');
+  const leftBookPage = document.getElementById('left-book-page');
+  const pageCornerPrev = document.getElementById('page-corner-prev');
+  const pageCornerNext = document.getElementById('page-corner-next');
+  const pageSoundToggle = document.getElementById('toggle-page-sound');
   let notebookOpened = false;
   let notebookOpening = false;
   let pageTurnInProgress = false;
+  let pageTurnSoundEnabled = false;
+  let pageGestureStart = null;
+  let pageTurnToken = 0;
 
   if (pagesStack) pagesStack.inert = true;
 
@@ -486,17 +525,20 @@ document.addEventListener('DOMContentLoaded', () => {
     notebookOpening = true;
     notebook.classList.add('is-opening');
     notebookCover.setAttribute('aria-expanded', 'true');
-    playNotebookVideo(currentNotebookPageIndex);
+    playNotebookVideo(0);
 
     const finishOpening = () => {
+      currentNotebookPageIndex = 0;
       notebookOpening = false;
       notebookOpened = true;
       if (pagesStack) pagesStack.inert = false;
       notebook.classList.remove('is-opening', 'opening-cover', 'closing-cover');
       notebook.classList.add('is-open');
+      renderBookSpread();
       updateNotebookNavigation();
     };
-    const transitionFallback = window.setTimeout(finishOpening, 1300);
+    const transitionFallback = window.setTimeout(finishOpening, 1000);
+    updateNotebookNavigation();
 
     notebookCover.addEventListener('transitionend', (event) => {
       if (event.target !== notebookCover || event.propertyName !== 'transform') return;
@@ -510,19 +552,24 @@ document.addEventListener('DOMContentLoaded', () => {
   function closeNotebook() {
     if (!notebookOpened || notebookOpening || !notebook || !notebookCover) return;
     notebookOpening = true;
-    notebookOpened = false;
-    if (pagesStack) pagesStack.querySelectorAll('video').forEach((video) => video.pause());
+    pageTurnInProgress = true;
+    pauseNotebookVideos();
     notebook.classList.remove('is-open');
     notebook.classList.add('is-opening', 'closing-cover');
     notebookCover.setAttribute('aria-expanded', 'false');
-    if (pagesStack) pagesStack.inert = true;
 
     const finishClosing = () => {
+      currentNotebookPageIndex = -1;
+      notebookOpened = false;
       notebookOpening = false;
+      pageTurnInProgress = false;
+      if (pagesStack) pagesStack.inert = true;
+      notebook.classList.remove('is-open');
       notebook.classList.remove('is-opening', 'closing-cover', 'opening-cover');
       updateNotebookNavigation();
     };
-    const transitionFallback = window.setTimeout(finishClosing, 1300);
+    const transitionFallback = window.setTimeout(finishClosing, 1000);
+    updateNotebookNavigation();
 
     notebookCover.addEventListener('transitionend', (event) => {
       if (event.target !== notebookCover || event.propertyName !== 'transform') return;
@@ -531,27 +578,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { once: true });
   }
 
-  if (notebook) {
-    notebook.addEventListener('click', () => {
-      if (!notebookOpened) openNotebook();
-    });
-  }
-
-  function renderSpiralNotebook() {
-    if (!pagesStack) return;
-    pagesStack.innerHTML = '';
-
-    SCRAPBOOK_PAGES.forEach((item, idx) => {
-      const pageWrapper = document.createElement('article');
-      pageWrapper.className = 'notebook-page';
-      pageWrapper.dataset.index = idx;
-      if (item.image && item.video) pageWrapper.classList.add('has-photo-and-video');
-
-      if (idx === 0) {
-        pageWrapper.classList.add('active');
-      }
-
-      pageWrapper.innerHTML = `
+  function memoryPageMarkup(item, idx, isStatic = false) {
+    return `
         <div class="notebook-page-header">
           <span class="page-num-badge">Memory ${String(idx + 1).padStart(2, '0')}</span>
           <span class="notebook-page-date">${item.date || ''}</span>
@@ -566,16 +594,18 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
               <figcaption class="photo-caption-block">
                 <p class="photo-title">${item.title}</p>
-                <button class="polaroid-like-btn" title="Send Love" aria-label="Send love">❤️ <span class="like-count">12</span></button>
-              </figcaption>
-            </figure>
-          ` : ''}
-          ${item.video ? `
+                  ${isStatic
+                    ? '<span class="polaroid-like-count" aria-hidden="true">♥ 12</span>'
+                    : '<button class="polaroid-like-btn" title="Send Love" aria-label="Send love">❤️ <span class="like-count">12</span></button>'}
+                </figcaption>
+              </figure>
+            ` : ''}
+            ${item.video ? `
             <div class="notebook-video">
-              <video controls playsinline preload="none" aria-label="${item.video.title}">
-                <source src="${item.video.src}" type="${item.video.src.endsWith('.webm') ? 'video/webm' : 'video/mp4'}">
-                Your browser does not support the video tag.
-              </video>
+                <video ${isStatic ? '' : 'controls'} playsinline preload="none" aria-label="${item.video.title}" ${isStatic ? 'aria-hidden="true"' : ''}>
+                  <source src="${item.video.src}" type="${item.video.src.endsWith('.webm') ? 'video/webm' : 'video/mp4'}">
+                  Your browser does not support the video tag.
+                </video>
               <div class="notebook-video-caption">
                 <strong>${item.video.title}</strong>
                 <span>${item.video.description}</span>
@@ -591,53 +621,60 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         </div>
       `;
+  }
 
-      // Tap to flip next/prev page
-      pageWrapper.addEventListener('click', (e) => {
-        if (e.target.closest('.polaroid-like-btn, video, button')) return;
-        if (!notebookOpened && !notebookOpening) {
-          openNotebook();
-          return;
-        }
+  function insideCoverMarkup(side) {
+    if (side === 'front') {
+      return `
+        <div class="inside-cover-content">
+          <span class="inside-cover-kicker">A note before you begin</span>
+          <h3>For all the good times.</h3>
+          <p>Every laugh, every little adventure, every ridiculous story — glad we got to share them.</p>
+          <span class="inside-cover-signature">— Your friend</span>
+        </div>
+      `;
+    }
 
-        if (!notebookOpened || pageTurnInProgress) return;
-        if (idx === currentNotebookPageIndex) {
-          goToPage(currentNotebookPageIndex + 1);
-        } else if (idx < currentNotebookPageIndex) {
-          goToPage(idx);
-        }
-      });
-
-      pagesStack.appendChild(pageWrapper);
-    });
-
-    const backCover = document.createElement('article');
-    backCover.className = 'notebook-page back-cover';
-    backCover.dataset.index = SCRAPBOOK_PAGES.length;
-    backCover.setAttribute('aria-label', 'Scrapbook back cover');
-    backCover.innerHTML = `
-      <div class="back-cover-content">
-        <span class="back-cover-title">The End...?</span>
-        <p>Here’s to all the memories still waiting to be made.</p>
-        <span class="back-cover-signoff">अभी के लिए बस इतना ही ❤️</span>
+    return `
+      <div class="inside-cover-content">
+        <span class="inside-cover-kicker">The story keeps going</span>
+        <h3>More memories to come.</h3>
+        <p>Here’s to the next chapter, and all the good times still ahead.</p>
+        <span class="inside-cover-signature">Happy birthday, Kishore.</span>
       </div>
     `;
-    backCover.addEventListener('click', () => {
-      if (notebookOpened && !pageTurnInProgress && currentNotebookPageIndex === SCRAPBOOK_PAGES.length) {
-        goToPage(currentNotebookPageIndex - 1);
-      }
-    });
-    pagesStack.appendChild(backCover);
+  }
 
-    updateNotebookNavigation();
-    bindPolaroidLikes();
+  function renderBookSpread() {
+    if (!pagesStack || !leftBookPage) return;
+
+    const index = Math.max(0, currentNotebookPageIndex);
+    leftBookPage.classList.toggle('inside-cover-page', index === 0);
+    if (index === 0) {
+      leftBookPage.innerHTML = insideCoverMarkup('front');
+    } else {
+      leftBookPage.innerHTML = memoryPageMarkup(SCRAPBOOK_PAGES[Math.min(index - 1, SCRAPBOOK_PAGES.length - 1)], index - 1, true);
+    }
+
+    pagesStack.querySelectorAll('.notebook-page').forEach((page) => {
+      page.classList.toggle('active', Number(page.dataset.index) === index && index < SCRAPBOOK_PAGES.length);
+    });
+
+    const backInside = pagesStack.querySelector('.inside-back-page');
+    if (backInside) backInside.classList.toggle('active', index === SCRAPBOOK_PAGES.length);
+    leftBookPage.setAttribute('aria-label', index === 0 ? 'Inside front cover' : `Memory ${index}`);
+    pagesStack.setAttribute('aria-label', index === SCRAPBOOK_PAGES.length ? 'Inside back cover' : `Memory ${index + 1}`);
+  }
+
+  function pauseNotebookVideos() {
+    if (pagesStack) pagesStack.querySelectorAll('video').forEach((video) => video.pause());
   }
 
   function playNotebookVideo(pageIndex) {
-    const page = pagesStack && pagesStack.querySelector(`[data-index="${pageIndex}"]`);
-    const video = page && page.querySelector('video');
+    const video = pagesStack?.querySelector(`.notebook-page[data-index="${pageIndex}"] video`);
     if (!video) return;
 
+    video.playsInline = true;
     video.loop = true;
     video.play().catch((error) => {
       if (error.name !== 'AbortError') {
@@ -646,74 +683,193 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function goToPage(targetIndex) {
-    if (notebookOpening || pageTurnInProgress) return;
-    if (!notebookOpened) {
-      openNotebook();
-      return;
-    }
-    if (targetIndex < 0) {
-      if (currentNotebookPageIndex === 0) closeNotebook();
-      return;
-    }
-    const lastPageIndex = SCRAPBOOK_PAGES.length;
-    if (targetIndex > lastPageIndex || targetIndex === currentNotebookPageIndex) return;
+  function renderSpiralNotebook() {
+    if (!pagesStack || !leftBookPage) return;
+    pagesStack.innerHTML = '';
 
-    const direction = targetIndex > currentNotebookPageIndex ? 'next' : 'previous';
-    const currentPage = pagesStack.querySelector(`[data-index="${currentNotebookPageIndex}"]`);
-    const targetPage = pagesStack.querySelector(`[data-index="${targetIndex}"]`);
-    if (!currentPage || !targetPage) return;
-    pagesStack.querySelectorAll('video').forEach((video) => video.pause());
-    playNotebookVideo(targetIndex);
-    pageTurnInProgress = true;
-    targetPage.classList.add('active');
-    if (direction === 'next') {
-      targetPage.classList.add('under-turn');
-    } else {
-      targetPage.classList.add('previous-under-turn');
-    }
-    void targetPage.offsetWidth;
-    requestAnimationFrame(() => {
-      if (direction === 'next') currentPage.classList.add('turning-next');
-      if (direction === 'previous') targetPage.classList.remove('previous-under-turn');
+    SCRAPBOOK_PAGES.forEach((item, idx) => {
+      const pageWrapper = document.createElement('article');
+      pageWrapper.className = 'notebook-page';
+      pageWrapper.dataset.index = idx;
+      pageWrapper.dataset.layout = String(idx % 3);
+      if (item.image && item.video) pageWrapper.classList.add('has-photo-and-video');
+      pageWrapper.innerHTML = memoryPageMarkup(item, idx);
+      pagesStack.appendChild(pageWrapper);
     });
 
-    window.setTimeout(() => {
-      currentPage.classList.remove('active', 'turning-next', 'under-turn');
-      targetPage.classList.add('active');
-      targetPage.classList.remove('under-turn', 'previous-under-turn');
+    const backInsidePage = document.createElement('article');
+    backInsidePage.className = 'notebook-page inside-back-page';
+    backInsidePage.innerHTML = insideCoverMarkup('back');
+    pagesStack.appendChild(backInsidePage);
+
+    renderBookSpread();
+    bindPolaroidLikes();
+  }
+
+  function playPageTurnSound() {
+    if (!pageTurnSoundEnabled) return;
+    const AudioContextConstructor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextConstructor) return;
+    if (!audioContext) audioContext = new AudioContextConstructor();
+    if (audioContext.state === 'suspended') {
+      audioContext.resume().catch((error) => console.warn('Could not resume page-turn sound:', error));
+    }
+
+    const duration = 0.12;
+    const buffer = audioContext.createBuffer(1, audioContext.sampleRate * duration, audioContext.sampleRate);
+    const channel = buffer.getChannelData(0);
+    for (let i = 0; i < channel.length; i++) {
+      channel[i] = (Math.random() * 2 - 1) * (1 - i / channel.length);
+    }
+    const source = audioContext.createBufferSource();
+    const filter = audioContext.createBiquadFilter();
+    const volume = audioContext.createGain();
+    source.buffer = buffer;
+    filter.type = 'bandpass';
+    filter.frequency.value = 1050;
+    filter.Q.value = 0.7;
+    volume.gain.setValueAtTime(0.0001, audioContext.currentTime);
+    volume.gain.linearRampToValueAtTime(0.035, audioContext.currentTime + 0.025);
+    volume.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + duration);
+    source.connect(filter);
+    filter.connect(volume);
+    volume.connect(audioContext.destination);
+    source.start();
+  }
+
+  function makePageLeaf(frontMarkup, backMarkup, direction, layoutIndex) {
+    const leaf = document.createElement('div');
+    leaf.className = `page-leaf ${direction === 'next' ? 'turning-forward' : 'turning-backward'}`;
+    leaf.dataset.layout = String(layoutIndex % 3);
+    leaf.setAttribute('aria-hidden', 'true');
+    leaf.innerHTML = `
+      <div class="page-leaf-face page-leaf-front">${frontMarkup}</div>
+      <div class="page-leaf-face page-leaf-back">${backMarkup}</div>
+      <span class="page-leaf-shadow" aria-hidden="true"></span>
+    `;
+    return leaf;
+  }
+
+  function turnPage(direction) {
+    if (!notebookOpened || notebookOpening || pageTurnInProgress) return;
+    if (direction === 'previous' && currentNotebookPageIndex === 0) {
+      closeNotebook();
+      return;
+    }
+
+    const lastPageIndex = SCRAPBOOK_PAGES.length;
+    const targetIndex = currentNotebookPageIndex + (direction === 'next' ? 1 : -1);
+    if (targetIndex < 0 || targetIndex > lastPageIndex) return;
+
+    const currentIndex = currentNotebookPageIndex;
+    let frontMarkup = direction === 'next'
+      ? memoryPageMarkup(SCRAPBOOK_PAGES[currentIndex], currentIndex, true)
+      : memoryPageMarkup(SCRAPBOOK_PAGES[Math.min(currentIndex - 1, lastPageIndex - 1)], Math.min(currentIndex - 1, lastPageIndex - 1), true);
+    let backMarkup = direction === 'next'
+      ? currentIndex === 0
+        ? insideCoverMarkup('front')
+        : memoryPageMarkup(SCRAPBOOK_PAGES[currentIndex - 1], currentIndex - 1, true)
+      : currentIndex === lastPageIndex
+        ? insideCoverMarkup('back')
+        : memoryPageMarkup(SCRAPBOOK_PAGES[currentIndex], currentIndex, true);
+
+    const mobileBackwardTurn = direction === 'previous' && window.matchMedia('(max-width: 768px)').matches;
+    pageTurnInProgress = true;
+    const turnToken = ++pageTurnToken;
+    pauseNotebookVideos();
+    if (!mobileBackwardTurn) {
       currentNotebookPageIndex = targetIndex;
+      renderBookSpread();
+    }
+    playNotebookVideo(targetIndex);
+    const leaf = makePageLeaf(
+      frontMarkup,
+      backMarkup,
+      direction,
+      direction === 'next' ? currentIndex : Math.max(0, currentIndex - 1)
+    );
+    document.getElementById('book-spread').appendChild(leaf);
+    playPageTurnSound();
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => leaf.classList.add('is-turning'));
+    });
+
+    let turnFinished = false;
+    let turnFallback;
+    const finishTurn = () => {
+      if (turnFinished || turnToken !== pageTurnToken) return;
+      turnFinished = true;
+      window.clearTimeout(turnFallback);
+      leaf.remove();
+      if (mobileBackwardTurn) {
+        currentNotebookPageIndex = targetIndex;
+        renderBookSpread();
+      }
       pageTurnInProgress = false;
       updateNotebookNavigation();
-    }, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 20 : 720);
+    };
+    leaf.addEventListener('transitionend', (event) => {
+      if (event.target === leaf && event.propertyName === 'transform') finishTurn();
+    });
+    turnFallback = window.setTimeout(finishTurn, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 50 : 1000);
+    updateNotebookNavigation();
   }
 
   function updateNotebookNavigation() {
     if (pageIndicator) {
       pageIndicator.textContent = notebookOpened
         ? currentNotebookPageIndex === SCRAPBOOK_PAGES.length
-          ? 'Back cover'
-          : `Page ${currentNotebookPageIndex + 1} of ${SCRAPBOOK_PAGES.length}`
+          ? 'Inside back cover'
+          : `Memory ${currentNotebookPageIndex + 1} of ${SCRAPBOOK_PAGES.length}`
         : 'Cover';
     }
-    if (btnPrev) btnPrev.disabled = !notebookOpened;
+    if (btnPrev) btnPrev.disabled = !notebookOpened || notebookOpening || pageTurnInProgress;
     if (btnNext) btnNext.textContent = notebookOpened ? 'Next ▶' : 'Open ▶';
-    if (btnNext) btnNext.disabled = notebookOpened && currentNotebookPageIndex === SCRAPBOOK_PAGES.length;
+    if (btnNext) btnNext.disabled = notebookOpening || pageTurnInProgress || (notebookOpened && currentNotebookPageIndex === SCRAPBOOK_PAGES.length);
+    if (pageCornerPrev) pageCornerPrev.disabled = !notebookOpened || notebookOpening || pageTurnInProgress;
+    if (pageCornerNext) pageCornerNext.disabled = !notebookOpened || notebookOpening || pageTurnInProgress || currentNotebookPageIndex === SCRAPBOOK_PAGES.length;
   }
 
   if (btnPrev) {
-    btnPrev.addEventListener('click', () => {
-      if (notebookOpened) goToPage(currentNotebookPageIndex - 1);
-    });
+    btnPrev.addEventListener('click', () => turnPage('previous'));
   }
   if (btnNext) {
     btnNext.addEventListener('click', () => {
       if (!notebookOpened) openNotebook();
-      else goToPage(currentNotebookPageIndex + 1);
+      else turnPage('next');
     });
   }
+  if (pageCornerPrev) pageCornerPrev.addEventListener('click', () => turnPage('previous'));
+  if (pageCornerNext) pageCornerNext.addEventListener('click', () => turnPage('next'));
   if (notebookCover) {
     notebookCover.addEventListener('click', openNotebook);
+  }
+  if (pageSoundToggle) {
+    pageSoundToggle.addEventListener('click', () => {
+      pageTurnSoundEnabled = !pageTurnSoundEnabled;
+      pageSoundToggle.setAttribute('aria-pressed', String(pageTurnSoundEnabled));
+      pageSoundToggle.textContent = pageTurnSoundEnabled ? 'Mute page sound' : 'Turn sound on';
+    });
+  }
+
+  if (notebook) {
+    notebook.addEventListener('pointerdown', (event) => {
+      if (!notebookOpened || event.target.closest('button, video, input, a')) return;
+      pageGestureStart = { x: event.clientX, y: event.clientY };
+      notebook.setPointerCapture(event.pointerId);
+    });
+    notebook.addEventListener('pointerup', (event) => {
+      if (!pageGestureStart) return;
+      const deltaX = event.clientX - pageGestureStart.x;
+      const deltaY = event.clientY - pageGestureStart.y;
+      pageGestureStart = null;
+      if (Math.abs(deltaX) < 48 || Math.abs(deltaX) < Math.abs(deltaY) * 1.3) return;
+      turnPage(deltaX < 0 ? 'next' : 'previous');
+    });
+    notebook.addEventListener('pointercancel', () => {
+      pageGestureStart = null;
+    });
   }
 
   renderSpiralNotebook();
@@ -808,7 +964,7 @@ document.addEventListener('DOMContentLoaded', () => {
     resizeCanvas();
   }
 
-  const confettiColors = ['#f43f5e', '#ec4899', '#a855f7', '#06b6d4', '#fbbf24', '#34d399', '#ffffff'];
+  const confettiColors = ['#bd644c', '#668c83', '#315b4b', '#bd8a3d', '#f3efe6', '#ffffff'];
 
   class Particle {
     constructor(x, y, vx, vy) {
