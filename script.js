@@ -20,7 +20,7 @@ const SCRAPBOOK_PAGES = [
     date: '15 August • Pure Energy',
     message: "Kishore, starting off with this icon of a memory! That day was filled with nothing but high energy and pure vibes. Here's to more days where we just conquer the city with unmatched spirit! 🚀",
     video: {
-      src: 'Asset/New project (1).mp4',
+      src: 'Asset/New project (real).mp4',
       title: 'Apke toothpaste me namak hai kya?😁',
       description: "kya muskurahat hai😃."
     }
@@ -43,7 +43,7 @@ const SCRAPBOOK_PAGES = [
     date: '14 September • Golden Hour',
     message: "The গরুর হাটের ছোট্ট vlog. Caught you right in the middle of genuine laughter! Never lose that contagious smile, Kishore. It lights up every room and brings good vibes everywhere you go. খিস্তি টা কম মারো",
     video: {
-      src: 'Asset/5_New project.mp4',
+      src: 'Asset/5_New project (actual).mp4',
       title: 'Behind The Scenes Chaos 💥',
       description: 'Real, unscripted, and 100% pure Kishore moments.'
     }
@@ -90,7 +90,7 @@ const SCRAPBOOK_PAGES = [
     message: "Handing Over the Gift to Ashraful was a moment of pure comedy gold. ",
 
     video: {
-      src: 'Asset/New project.mp4',
+      src: 'Asset/New project (actual).mp4',
       title: 'IYKYK🤣🤣',
       description: "Sorry Broo 🙏🏻🙏🏻"
     }
