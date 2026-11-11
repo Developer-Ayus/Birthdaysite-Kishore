@@ -20,7 +20,7 @@ const SCRAPBOOK_PAGES = [
     date: '15 August • Pure Energy',
     message: "Kishore, starting off with this icon of a memory! That day was filled with nothing but high energy and pure vibes. Here's to more days where we just conquer the city with unmatched spirit! 🚀",
     video: {
-      src: 'Asset/New project (1).webm',
+      src: 'Asset/New project (1).mp4',
       title: 'Apke toothpaste me namak hai kya?😁',
       description: "kya muskurahat hai😃."
     }
@@ -90,7 +90,7 @@ const SCRAPBOOK_PAGES = [
     message: "Handing Over the Gift to Ashraful was a moment of pure comedy gold. ",
 
     video: {
-      src: 'Asset/New project.webm',
+      src: 'Asset/New project.mp4',
       title: 'IYKYK🤣🤣',
       description: "Sorry Broo 🙏🏻🙏🏻"
     }
