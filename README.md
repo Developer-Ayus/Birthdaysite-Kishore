@@ -1,1 +1,1 @@
-<h1>Changes in File and rebuilding pages</h1>
+<h1>Static Pages</h1>
