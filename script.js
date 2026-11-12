@@ -43,7 +43,7 @@ const SCRAPBOOK_PAGES = [
     date: '14 September • Golden Hour',
     message: "The গরুর হাটের ছোট্ট vlog. Caught you right in the middle of genuine laughter! Never lose that contagious smile, Kishore. It lights up every room and brings good vibes everywhere you go. খিস্তি টা কম মারো",
     video: {
-      src: 'Asset/5_New project (actual).mp4',
+      src: 'Asset/5_New project.mp4',
       title: 'Behind The Scenes Chaos 💥',
       description: 'Real, unscripted, and 100% pure Kishore moments.'
     }
